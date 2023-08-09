@@ -20,6 +20,7 @@ defmodule MyFirstPhoenixWeb.Router do
     get "/", PageController, :home
 
     live "/counter", Counter
+    live "/button", Button
   end
 
   # Other scopes may use custom stacks.
