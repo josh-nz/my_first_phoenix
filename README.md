@@ -1,5 +1,7 @@
 # MyFirstPhoenix
 
+This is a playground app to learn Elixir and Phoenix, so it's full of random bits.
+
 To start your Phoenix server:
 
   * Run `mix setup` to install and setup dependencies
