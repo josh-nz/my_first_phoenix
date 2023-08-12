@@ -2,8 +2,8 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
   use MyFirstPhoenixWeb, :live_view
 
   defmodule History do
-    @enforce_keys [:id, :time_stamp, :log, :board]
-    defstruct [:id, :time_stamp, :log, :board]
+    @enforce_keys [:id, :board, :log, :time_stamp]
+    defstruct [:id, :board, :log, :time_stamp]
   end
 
   def mount(_params, _session, socket) do
@@ -16,7 +16,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
 
   def handle_event("square-clicked", %{"grid-id" => grid_id_str}, socket) do
     grid_id = String.to_integer(grid_id_str)
-    [{board, _, _} | _] = socket.assigns.game_state
+    [%History{board: board} | _] = socket.assigns.game_state
     player = socket.assigns.player
 
     socket = maybe_update_board(socket, grid_id, board, player, board[grid_id])
@@ -31,11 +31,12 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
   defp maybe_update_board(socket, grid_id, board, player, "") do
     new_board = Map.put(board, grid_id, player)
 
-    new_game_state = [{
-      new_board,
-      "Player #{player} placed in square #{grid_id}",
-      nz_now()
-    }] ++ socket.assigns.game_state
+    new_game_state = [%History{
+      id: length(socket.assigns.game_state),
+      board: new_board,
+      log: "Player #{player} placed in square #{grid_id}",
+      time_stamp: nz_now()
+    }]
 
     IO.inspect(new_game_state)
 
@@ -44,7 +45,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     assign(socket,
       player: if(game_over, do: player, else: next_player(player)),
       board: new_board,
-      game_state: new_game_state,
+      game_state: new_game_state ++ socket.assigns.game_state,
       game_over: game_over
     )
   end
@@ -79,10 +80,10 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
       4 => "", 5 => "", 6 => "",
       7 => "", 8 => "", 9 => ""
     }
-    h = %History{id: 1, time_stamp: nz_now(), log: "test", board: board}
+
     %{player: "X",
       board: board,
-      game_state: [{board, "Initialised new game.", nz_now()}],
+      game_state: [%History{id: 0, board: board, log: "Initialised new game.", time_stamp: nz_now()}],
       game_over: false
     }
   end
@@ -104,7 +105,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     <.board_row indexes={[4,5,6]} board={@board} disabled={@game_over} />
     <.board_row indexes={[7,8,9]} board={@board} disabled={@game_over} />
 
-    <.game_history history={Enum.map(@game_state, fn {_, l, t} -> {t, l} end)} />
+    <.game_history history={@game_state} />
     """
   end
 
@@ -140,10 +141,11 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     ~H"""
     <div>
       <h2 class="font-bold">Game history</h2>
-      <dl class="grid grid-cols-[max-content_1fr] gap-x-4">
-        <%= for {time, log} <- @history do %>
-          <dt class=""><%= Calendar.strftime(time, "%X") %></dt>
-          <dd class=""><%= log %></dd>
+      <dl class="grid grid-cols-[max-content_max-content_1fr] gap-x-4">
+        <%= for h <- @history do %>
+          <dt>Turn <%= h.id %></dt>
+          <dd class=""><%= Calendar.strftime(h.time_stamp, "%X") %></dd>
+          <dd class=""><%= h.log %></dd>
         <% end %>
       </dl>
     </div>
