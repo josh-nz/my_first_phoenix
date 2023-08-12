@@ -20,7 +20,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     player = socket.assigns.player
 
     socket = maybe_update_board(socket, grid_id, board, player, board[grid_id])
-    IO.inspect(socket.assigns)
+    #IO.inspect(socket.assigns)
     {:noreply, socket}
 
     # {:noreply, socket
@@ -38,12 +38,12 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
       time_stamp: nz_now()
     }]
 
-    IO.inspect(new_game_state)
+    #IO.inspect(new_game_state)
 
-    game_over = game_over?(new_board)
+    game_over = game_over?(new_board, player)
 
     assign(socket,
-      player: if(game_over, do: player, else: next_player(player)),
+      player: if(elem(game_over, 0) == :undecided, do: next_player(player), else: player),
       board: new_board,
       game_state: new_game_state ++ socket.assigns.game_state,
       game_over: game_over
@@ -57,7 +57,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
   defp next_player("X"), do: "O"
   defp next_player("O"), do: "X"
 
-  defp game_over?(board) do
+  defp game_over?(board, player) do
     winning_lines = [
       [1, 2, 3],
       [4, 5, 6],
@@ -69,9 +69,17 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
       [3, 5, 7]
     ]
 
-    Enum.any?(winning_lines, fn [a, b, c] ->
+    player_has_won = Enum.any?(winning_lines, fn [a, b, c] ->
       board[a] != "" and board[a] == board[b] and board[a] == board[c]
     end)
+
+    board_is_full = not Enum.any?(board, fn {k, v} -> v == "" end)
+
+    cond do
+      player_has_won -> {:winner, player}
+      board_is_full -> {:stalemate, ""}
+      true -> {:undecided}
+    end
   end
 
   defp new_game() do
@@ -84,7 +92,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     %{player: "X",
       board: board,
       game_state: [%History{id: 0, board: board, log: "Initialised new game.", time_stamp: nz_now()}],
-      game_over: false
+      game_over: {:undecided}
     }
   end
 
@@ -92,18 +100,34 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     DateTime.now!("Pacific/Auckland")
   end
 
+  def game_status(%{status: {status, _}, player: player} = assigns)
+    when status == :winner or status == :stalemate do
+
+    assigns = assign(assigns, :status, status)
+    ~H"""
+    <div>
+      <p :if={@status == :winner}>Game over. Winner was player <%= @player %>.</p>
+      <p :if={@status == :stalemate}>Game over, stalemate.</p>
+      <.button phx-click="reset">New game</.button>
+    </div>
+    """
+  end
+
+  def game_status(%{status: {:undecided}, player: player} = assigns) do
+    ~H"""
+    <div>Current player: <%= @player %></div>
+    """
+  end
+
   def render(assigns) do
     ~H"""
     <h1 class="font-bold">Tic Tac Toe</h1>
-    <div :if={@game_over}>
-      <p>Game over. Winner was player <%= @player %></p>
-      <.button phx-click="reset" >New game</.button>
-    </div>
-    <div :if={not @game_over}>Current player: <%= @player %></div>
 
-    <.board_row indexes={[1,2,3]} board={@board} disabled={@game_over} />
-    <.board_row indexes={[4,5,6]} board={@board} disabled={@game_over} />
-    <.board_row indexes={[7,8,9]} board={@board} disabled={@game_over} />
+    <.game_status status={@game_over} player={@player} />
+
+    <.board_row indexes={[1,2,3]} board={@board} game_status={elem(@game_over, 0)} />
+    <.board_row indexes={[4,5,6]} board={@board} game_status={elem(@game_over, 0)} />
+    <.board_row indexes={[7,8,9]} board={@board} game_status={elem(@game_over, 0)} />
 
     <.game_history history={@game_state} />
     """
@@ -111,25 +135,25 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
 
   attr :indexes, :list, required: true
   attr :board, :map, required: true
-  attr :disabled, :boolean, required: true
+  attr :game_status, :atom, required: true
   def board_row(assigns) do
     ~H"""
     <div class="flex flex-row">
-      <.square :for={n <- @indexes} id={n} state={@board[n]} disabled={@disabled} />
+      <.square :for={n <- @indexes} id={n} state={@board[n]} game_status={@game_status} />
     </div>
     """
   end
 
   attr :id, :string, required: true
   attr :state, :string, required: true
-  attr :disabled, :boolean, required: true
+  attr :game_status, :atom, required: true
   def square(assigns) do
     ~H"""
     <button
       class="border border-black text-2xl font-bold text-center h-8 w-8 -mt-0.5 -mr-0.5 p-0"
       phx-click="square-clicked"
       phx-value-grid-id={@id}
-      disabled={@disabled}
+      disabled={@game_status != :undecided}
       >
       <%= @state %>
     </button>
