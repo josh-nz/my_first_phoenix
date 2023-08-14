@@ -139,9 +139,9 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
 
     <.game_status game_status={@current_state.status} player={@current_state.next_player}  />
 
-    <.board_row indexes={[1,2,3]} board={@current_state.board} game_status={@current_state.status} />
-    <.board_row indexes={[4,5,6]} board={@current_state.board} game_status={@current_state.status} />
-    <.board_row indexes={[7,8,9]} board={@current_state.board} game_status={@current_state.status} />
+    <.board_row indexes={[1,2,3]} board={@current_state.board} />
+    <.board_row indexes={[4,5,6]} board={@current_state.board} />
+    <.board_row indexes={[7,8,9]} board={@current_state.board} />
 
     <.game_history history={@game_history} />
     """
@@ -172,11 +172,10 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
 
   attr :indexes, :list, required: true
   attr :board, :map, required: true
-  attr :game_status, :atom, required: true
   def board_row(assigns) do
     ~H"""
     <div class="flex flex-row">
-      <.square :for={n <- @indexes} id={n} state={@board[n]} game_status={@game_status} />
+      <.square :for={n <- @indexes} id={n} state={@board[n]} />
     </div>
     """
   end
@@ -184,14 +183,13 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
 
   attr :id, :string, required: true
   attr :state, :string, required: true
-  attr :game_status, :atom, required: true
   def square(assigns) do
     ~H"""
     <button
       class="border border-black text-2xl font-bold text-center h-8 w-8 -mt-0.5 -mr-0.5 p-0"
       phx-click="square-clicked"
       phx-value-grid-id={@id}
-      disabled={@game_status != :undecided and @state != ""}
+      disabled={@state != ""}
       >
       <%= @state %>
     </button>
