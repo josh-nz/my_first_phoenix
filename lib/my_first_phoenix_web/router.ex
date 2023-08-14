@@ -22,6 +22,8 @@ defmodule MyFirstPhoenixWeb.Router do
     live "/counter", Counter
     live "/button", Button
     live "/tictactoe", TicTacToe
+
+    live "/rendertest", RenderTest
   end
 
   # Other scopes may use custom stacks.
