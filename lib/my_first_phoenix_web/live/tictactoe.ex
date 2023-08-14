@@ -6,26 +6,48 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     defstruct [:id, :board, :log, :time_stamp]
   end
 
+  @impl true
   def mount(_params, _session, socket) do
     {:ok, assign(socket, new_game())}
   end
 
+  @impl true
   def handle_event("reset", _, socket) do
     {:noreply, assign(socket, new_game())}
   end
 
   def handle_event("square-clicked", %{"grid-id" => grid_id_str}, socket) do
+    #IO.puts("Handle square clicked")
     grid_id = String.to_integer(grid_id_str)
     [%History{board: board} | _] = socket.assigns.game_state
     player = socket.assigns.player
 
     socket = maybe_update_board(socket, grid_id, board, player, board[grid_id])
     #IO.inspect(socket.assigns)
+
     {:noreply, socket}
 
     # {:noreply, socket
     #   |> maybe_update_board(grid_id, board, player, board[grid_id])
     # }
+  end
+
+  defp new_game() do
+    board = %{
+      1 => "", 2 => "", 3 => "",
+      4 => "", 5 => "", 6 => "",
+      7 => "", 8 => "", 9 => ""
+    }
+
+    %{player: "X",
+      board: board,
+      game_state: [%History{id: 0, board: board, log: "Initialised new game.", time_stamp: nz_now()}],
+      game_over: %{status: :undecided, next_player: "X", turn: 0}
+    }
+  end
+
+  defp nz_now() do
+    DateTime.now!("Pacific/Auckland")
   end
 
   defp maybe_update_board(socket, grid_id, board, player, "") do
@@ -43,7 +65,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     game_over = game_over?(new_board, player)
 
     assign(socket,
-      player: if(elem(game_over, 0) == :undecided, do: next_player(player), else: player),
+      player: if(game_over.status == :undecided, do: next_player(player), else: player),
       board: new_board,
       game_state: new_game_state ++ socket.assigns.game_state,
       game_over: game_over
@@ -73,65 +95,54 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
       board[a] != "" and board[a] == board[b] and board[a] == board[c]
     end)
 
-    board_is_full = not Enum.any?(board, fn {k, v} -> v == "" end)
+    board_is_full = not Enum.any?(board, fn {_, v} -> v == "" end)
 
     cond do
-      player_has_won -> {:winner, player}
-      board_is_full -> {:stalemate, ""}
-      true -> {:undecided}
+      player_has_won -> %{status: :winner, next_player: player}
+      board_is_full -> %{status: :stalemate, next_player: nil}
+      true -> %{status: :undecided, next_player: next_player(player)}
     end
   end
 
-  defp new_game() do
-    board = %{
-      1 => "", 2 => "", 3 => "",
-      4 => "", 5 => "", 6 => "",
-      7 => "", 8 => "", 9 => ""
-    }
 
-    %{player: "X",
-      board: board,
-      game_state: [%History{id: 0, board: board, log: "Initialised new game.", time_stamp: nz_now()}],
-      game_over: {:undecided}
-    }
-  end
 
-  defp nz_now() do
-    DateTime.now!("Pacific/Auckland")
-  end
-
-  def game_status(%{status: {status, _}, player: player} = assigns)
-    when status == :winner or status == :stalemate do
-
-    assigns = assign(assigns, :status, status)
+  @impl true
+  def render(assigns) do
     ~H"""
-    <div>
-      <p :if={@status == :winner}>Game over. Winner was player <%= @player %>.</p>
-      <p :if={@status == :stalemate}>Game over, stalemate.</p>
-      <.button phx-click="reset">New game</.button>
-    </div>
+    <h1 class="font-bold">Tic Tac Toe</h1>
+
+    <.game_status game_status={@game_over.status} player={@game_over.next_player}  />
+
+    <.board_row indexes={[1,2,3]} board={@board} game_status={@game_over.status} />
+    <.board_row indexes={[4,5,6]} board={@board} game_status={@game_over.status} />
+    <.board_row indexes={[7,8,9]} board={@board} game_status={@game_over.status} />
+
+    <.game_history history={@game_state} />
     """
   end
 
-  def game_status(%{status: {:undecided}, player: player} = assigns) do
+
+  # attr :game_status, :atom, required: true
+  # attr :player, :string, required: true
+  def game_status(%{game_status: :undecided} = assigns) do
     ~H"""
     <div>Current player: <%= @player %></div>
     """
   end
 
-  def render(assigns) do
+
+  # attr :game_status, :atom, required: true
+  # attr :player, :string, required: true
+  def game_status(assigns) do
     ~H"""
-    <h1 class="font-bold">Tic Tac Toe</h1>
-
-    <.game_status status={@game_over} player={@player} />
-
-    <.board_row indexes={[1,2,3]} board={@board} game_status={elem(@game_over, 0)} />
-    <.board_row indexes={[4,5,6]} board={@board} game_status={elem(@game_over, 0)} />
-    <.board_row indexes={[7,8,9]} board={@board} game_status={elem(@game_over, 0)} />
-
-    <.game_history history={@game_state} />
+    <div>
+      <p :if={@game_status == :winner}>Game over. Winner was player <%= @player %>.</p>
+      <p :if={@game_status == :stalemate}>Game over, stalemate.</p>
+      <.button phx-click="reset">New game</.button>
+    </div>
     """
   end
+
 
   attr :indexes, :list, required: true
   attr :board, :map, required: true
@@ -143,6 +154,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     </div>
     """
   end
+
 
   attr :id, :string, required: true
   attr :state, :string, required: true
@@ -160,6 +172,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     """
   end
 
+
   attr :history, :list, required: true
   def game_history(assigns) do
     ~H"""
@@ -175,6 +188,4 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     </div>
     """
   end
-
-
 end
