@@ -2,8 +2,8 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
   use MyFirstPhoenixWeb, :live_view
 
   defmodule History do
-    @enforce_keys [:id, :board, :log, :time_stamp]
-    defstruct [:id, :board, :log, :time_stamp]
+    @enforce_keys [:turn, :board, :log, :time_stamp]
+    defstruct [:turn, :board, :log, :time_stamp]
   end
 
   @impl true
@@ -32,6 +32,22 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     # }
   end
 
+  def handle_event("undo", %{"turn" => turn_str}, socket) do
+    turn = String.to_integer(turn_str)
+    history = socket.assigns.game_state
+    current_turn = length(history)
+    undo_history =
+      case turn do
+        x when x >= current_turn or x < 0 -> history  # guard against invalid turn
+        _ -> Enum.slice(history, (current_turn - turn - 1)..9)
+      end
+
+    {:noreply, assign(socket, %{
+      game_state: undo_history,
+      board: hd(undo_history).board})
+    }
+  end
+
   defp new_game() do
     board = %{
       1 => "", 2 => "", 3 => "",
@@ -40,7 +56,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     }
 
     %{board: board,
-      game_state: [%History{id: 0, board: board, log: "Initialised new game.", time_stamp: nz_now()}],
+      game_state: [%History{turn: 0, board: board, log: "Initialised new game.", time_stamp: nz_now()}],
       game_over: %{status: :undecided, next_player: "X", turn: 0}
     }
   end
@@ -53,7 +69,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     new_board = Map.put(board, grid_id, player)
 
     new_game_state = %History{
-      id: length(socket.assigns.game_state),
+      turn: length(socket.assigns.game_state),
       board: new_board,
       log: "Player #{player} placed in square #{grid_id}",
       time_stamp: nz_now()
@@ -176,11 +192,14 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     ~H"""
     <div>
       <h2 class="font-bold">Game history</h2>
-      <dl class="grid grid-cols-[max-content_max-content_1fr] gap-x-4">
+      <dl class="">
         <%= for h <- @history do %>
-          <dt>Turn <%= h.id %></dt>
-          <dd class=""><%= Calendar.strftime(h.time_stamp, "%X") %></dd>
-          <dd class=""><%= h.log %></dd>
+          <a phx-click="undo" phx-value-turn={h.turn}
+             class="cursor-pointer hover:bg-zinc-100 flex gap-4">
+            <dt>Turn <%= h.turn %></dt>
+            <dd class=""><%= Calendar.strftime(h.time_stamp, "%X") %></dd>
+            <dd class=""><%= h.log %></dd>
+          </a>
         <% end %>
       </dl>
     </div>
