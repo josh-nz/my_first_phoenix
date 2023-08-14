@@ -19,8 +19,8 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
   def handle_event("square-clicked", %{"grid-id" => grid_id_str}, socket) do
     #IO.puts("Handle square clicked")
     grid_id = String.to_integer(grid_id_str)
-    [%History{board: board} | _] = socket.assigns.game_state
-    player = socket.assigns.player
+    %History{board: board} = hd(socket.assigns.game_state)
+    player = socket.assigns.game_over.next_player
 
     socket = maybe_update_board(socket, grid_id, board, player, board[grid_id])
     #IO.inspect(socket.assigns)
@@ -39,8 +39,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
       7 => "", 8 => "", 9 => ""
     }
 
-    %{player: "X",
-      board: board,
+    %{board: board,
       game_state: [%History{id: 0, board: board, log: "Initialised new game.", time_stamp: nz_now()}],
       game_over: %{status: :undecided, next_player: "X", turn: 0}
     }
@@ -53,21 +52,20 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
   defp maybe_update_board(socket, grid_id, board, player, "") do
     new_board = Map.put(board, grid_id, player)
 
-    new_game_state = [%History{
+    new_game_state = %History{
       id: length(socket.assigns.game_state),
       board: new_board,
       log: "Player #{player} placed in square #{grid_id}",
       time_stamp: nz_now()
-    }]
+    }
 
     #IO.inspect(new_game_state)
 
     game_over = game_over?(new_board, player)
 
     assign(socket,
-      player: if(game_over.status == :undecided, do: next_player(player), else: player),
       board: new_board,
-      game_state: new_game_state ++ socket.assigns.game_state,
+      game_state: [new_game_state] ++ socket.assigns.game_state,
       game_over: game_over
     )
   end
