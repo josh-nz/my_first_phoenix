@@ -18,6 +18,7 @@ defmodule MyFirstPhoenixWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/chat", PageController, :chat
 
     live "/counter", Counter
     live "/button", Button

@@ -48,4 +48,9 @@ defmodule MyFirstPhoenixWeb.Endpoint do
   plug Plug.Head
   plug Plug.Session, @session_options
   plug MyFirstPhoenixWeb.Router
+
+
+  socket "/socket", MyFirstPhoenixWeb.UserSocket,
+    websocket: true,
+    longpoll: false
 end
