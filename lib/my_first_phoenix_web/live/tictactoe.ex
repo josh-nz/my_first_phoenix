@@ -149,17 +149,14 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
   end
 
 
-  # attr :game_status, :atom, required: true
-  # attr :player, :string, required: true
+  attr :game_status, :atom, required: true
+  attr :player, :string, required: true
   def game_status(%{game_status: :undecided} = assigns) do
     ~H"""
     <div>Current player: <%= @player %></div>
     """
   end
 
-
-  # attr :game_status, :atom, required: true
-  # attr :player, :string, required: true
   def game_status(assigns) do
     ~H"""
     <div>
