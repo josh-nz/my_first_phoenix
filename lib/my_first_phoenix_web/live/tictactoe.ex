@@ -1,7 +1,7 @@
 defmodule MyFirstPhoenixWeb.TicTacToe do
   use MyFirstPhoenixWeb, :live_view
 
-  defmodule History do
+  defmodule Turn do
     @enforce_keys [:turn, :board, :next_player, :status, :log, :time_stamp]
     defstruct [:turn, :board, :next_player, :status, :log, :time_stamp]
   end
@@ -10,8 +10,8 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
   def mount(_params, _session, socket) do
     game = new_game()
     {:ok, assign(socket, %{
-      current_state: hd(game),
-      game_history: game
+      current_turn: hd(game),
+      game_turns: game
     })}
   end
 
@@ -19,15 +19,15 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
   def handle_event("reset", _, socket) do
     game = new_game()
     {:noreply, assign(socket, %{
-      current_state: hd(game),
-      game_history: game
+      current_turn: hd(game),
+      game_turns: game
     })}
   end
 
   def handle_event("square-clicked", %{"grid-id" => grid_id_str}, socket) do
     #IO.puts("Handle square clicked")
     grid_id = String.to_integer(grid_id_str)
-    %History{board: board, next_player: player} = socket.assigns.current_state
+    %Turn{board: board, next_player: player} = socket.assigns.current_turn
 
     socket = maybe_update_board(socket, grid_id, board, player, board[grid_id])
     #IO.inspect(socket.assigns)
@@ -41,8 +41,9 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
 
   def handle_event("undo", %{"turn" => turn_str}, socket) do
     turn = String.to_integer(turn_str)
-    history = socket.assigns.game_history
+    history = socket.assigns.game_turns
     current_turn = length(history)
+
     new_history =
       case turn do
         x when x >= current_turn or x < 0 -> history  # guard against invalid turn
@@ -50,8 +51,8 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
       end
 
     {:noreply, assign(socket, %{
-      current_state: hd(new_history),
-      game_history: new_history
+      current_turn: hd(new_history),
+      game_turns: new_history
     })}
   end
 
@@ -62,7 +63,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
       7 => "", 8 => "", 9 => ""
     }
 
-    [%History{
+    [%Turn{
       turn: 0,
       board: board,
       next_player: "X",
@@ -81,8 +82,8 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
 
     {status, next_player} = game_over?(new_board, player)
 
-    new_game_state = %History{
-      turn: length(socket.assigns.game_history),
+    new_game_state = %Turn{
+      turn: length(socket.assigns.game_turns),
       board: new_board,
       next_player: next_player,
       status: status,
@@ -93,8 +94,8 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     #IO.inspect(new_game_state)
 
     assign(socket, %{
-      current_state: new_game_state,
-      game_history: [new_game_state] ++ socket.assigns.game_history
+      current_turn: new_game_state,
+      game_turns: [new_game_state] ++ socket.assigns.game_turns
     })
   end
 
@@ -137,13 +138,13 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
     ~H"""
     <h1 class="font-bold">Tic Tac Toe</h1>
 
-    <.game_status game_status={@current_state.status} player={@current_state.next_player}  />
+    <.game_status game_status={@current_turn.status} player={@current_turn.next_player}  />
 
-    <.board_row indexes={[1,2,3]} board={@current_state.board} />
-    <.board_row indexes={[4,5,6]} board={@current_state.board} />
-    <.board_row indexes={[7,8,9]} board={@current_state.board} />
+    <.board_row indexes={[1,2,3]} board={@current_turn.board} />
+    <.board_row indexes={[4,5,6]} board={@current_turn.board} />
+    <.board_row indexes={[7,8,9]} board={@current_turn.board} />
 
-    <.game_history history={@game_history} />
+    <.game_history history={@game_turns} />
     """
   end
 
