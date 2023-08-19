@@ -17,9 +17,11 @@ defmodule MyFirstPhoenix.Application do
       # Start Finch
       {Finch, name: MyFirstPhoenix.Finch},
       # Start the Endpoint (http/https)
-      MyFirstPhoenixWeb.Endpoint
+      MyFirstPhoenixWeb.Endpoint,
       # Start a worker by calling: MyFirstPhoenix.Worker.start_link(arg)
       # {MyFirstPhoenix.Worker, arg}
+
+      {MyFirstPhoenix.RootGamesSupervisor, name: MyFirstPhoenix.RootGamesSupervisor}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
