@@ -1,134 +1,46 @@
 defmodule MyFirstPhoenixWeb.TicTacToe do
   use MyFirstPhoenixWeb, :live_view
 
-  defmodule Turn do
-    @enforce_keys [:turn, :board, :next_player, :status, :log, :time_stamp]
-    defstruct [:turn, :board, :next_player, :status, :log, :time_stamp]
-  end
+  alias MyFirstPhoenix.Tictactoe, as: G
 
   @impl true
   def mount(_params, _session, socket) do
-    game = new_game()
+    turns = G.new_game()
     {:ok, assign(socket, %{
-      current_turn: hd(game),
-      game_turns: game
+      current_turn: hd(turns),
+      game_turns: turns
     })}
   end
 
   @impl true
   def handle_event("reset", _, socket) do
-    game = new_game()
+    turns = G.new_game()
     {:noreply, assign(socket, %{
-      current_turn: hd(game),
-      game_turns: game
+      current_turn: hd(turns),
+      game_turns: turns
     })}
   end
 
   def handle_event("square-clicked", %{"grid-id" => grid_id_str}, socket) do
-    #IO.puts("Handle square clicked")
     grid_id = String.to_integer(grid_id_str)
-    %Turn{board: board, next_player: player} = socket.assigns.current_turn
 
-    socket = maybe_update_board(socket, grid_id, board, player, board[grid_id])
-    #IO.inspect(socket.assigns)
+    turns = G.take_turn(socket.assigns.game_turns, grid_id)
 
-    {:noreply, socket}
-
-    # {:noreply, socket
-    #   |> maybe_update_board(grid_id, board, player, board[grid_id])
-    # }
+    {:noreply, assign(socket, %{
+      current_turn: hd(turns),
+      game_turns: turns
+    })}
   end
 
   def handle_event("undo", %{"turn" => turn_str}, socket) do
     turn = String.to_integer(turn_str)
-    history = socket.assigns.game_turns
-    current_turn = length(history)
 
-    new_history =
-      case turn do
-        x when x >= current_turn or x < 0 -> history  # guard against invalid turn
-        _ -> Enum.slice(history, (current_turn - turn - 1)..9)
-      end
+    turns = G.rewind(socket.assigns.game_turns, turn)
 
     {:noreply, assign(socket, %{
-      current_turn: hd(new_history),
-      game_turns: new_history
+      current_turn: hd(turns),
+      game_turns: turns
     })}
-  end
-
-  defp new_game() do
-    board = %{
-      1 => "", 2 => "", 3 => "",
-      4 => "", 5 => "", 6 => "",
-      7 => "", 8 => "", 9 => ""
-    }
-
-    [%Turn{
-      turn: 0,
-      board: board,
-      next_player: "X",
-      status: :undecided,
-      log: "Initialised new game.",
-      time_stamp: nz_now()
-    }]
-  end
-
-  defp nz_now() do
-    DateTime.now!("Pacific/Auckland")
-  end
-
-  defp maybe_update_board(socket, grid_id, board, player, "") do
-    new_board = Map.put(board, grid_id, player)
-
-    {status, next_player} = game_over?(new_board, player)
-
-    new_game_state = %Turn{
-      turn: length(socket.assigns.game_turns),
-      board: new_board,
-      next_player: next_player,
-      status: status,
-      log: "Player #{player} placed in square #{grid_id}",
-      time_stamp: nz_now()
-    }
-
-    #IO.inspect(new_game_state)
-
-    assign(socket, %{
-      current_turn: new_game_state,
-      game_turns: [new_game_state] ++ socket.assigns.game_turns
-    })
-  end
-
-  defp maybe_update_board(socket, _grid_id, _board, _player, _board_value) do
-    socket
-  end
-
-  defp next_player("X"), do: "O"
-  defp next_player("O"), do: "X"
-
-  defp game_over?(board, player) do
-    winning_lines = [
-      [1, 2, 3],
-      [4, 5, 6],
-      [7, 8, 9],
-      [1, 4, 7],
-      [2, 5, 8],
-      [3, 6, 9],
-      [1, 5, 9],
-      [3, 5, 7]
-    ]
-
-    player_has_won = Enum.any?(winning_lines, fn [a, b, c] ->
-      board[a] != "" and board[a] == board[b] and board[a] == board[c]
-    end)
-
-    board_is_full = not Enum.any?(board, fn {_, v} -> v == "" end)
-
-    cond do
-      player_has_won -> {:winner, player}
-      board_is_full -> {:stalemate, nil}
-      true -> {:undecided, next_player(player)}
-    end
   end
 
 
