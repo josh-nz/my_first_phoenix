@@ -1,15 +1,18 @@
 defmodule MyFirstPhoenixWeb.TicTacToe do
   use MyFirstPhoenixWeb, :live_view
 
-  alias MyFirstPhoenix.Tictactoe, as: G
+  alias MyFirstPhoenix.Tictactoe.Game, as: G
+  alias MyFirstPhoenix.Tictactoe.GameSupervisor
 
   @impl true
-  def mount(_params, _session, socket) do
-    {game_pid, turns} = G.register_game("test")
-    # turns = G.new_game(game_pid)
+  def mount(params, _session, socket) do
+    IO.inspect(params, label: "params")
+    name = "test"
+    GameSupervisor.create_game(name)
+    turns = G.new_game(name)
 
     {:ok, assign(socket, %{
-      game_pid: game_pid,
+      game_name: name,
       current_turn: hd(turns),
       game_turns: turns
     })}
@@ -18,7 +21,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
   @impl true
   def handle_event("reset", _, socket) do
     # {:noreply, socket}
-    turns = G.new_game(socket.assigns.game_pid)
+    turns = G.new_game(socket.assigns.game_name)
     {:noreply, assign(socket, %{
       current_turn: hd(turns),
       game_turns: turns
@@ -28,7 +31,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
   def handle_event("square-clicked", %{"grid-id" => grid_id_str}, socket) do
     grid_id = String.to_integer(grid_id_str)
 
-    turn = G.take_turn(socket.assigns.game_pid, grid_id)
+    turn = G.take_turn(socket.assigns.game_name, grid_id)
 
     {:noreply, assign(socket, %{
       current_turn: turn,
@@ -39,7 +42,7 @@ defmodule MyFirstPhoenixWeb.TicTacToe do
   def handle_event("undo", %{"turn" => turn_str}, socket) do
     turn = String.to_integer(turn_str)
 
-    turns = G.rewind(socket.assigns.game_pid, turn)
+    turns = G.rewind(socket.assigns.game_name, turn)
 
     {:noreply, assign(socket, %{
       current_turn: hd(turns),

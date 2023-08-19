@@ -21,7 +21,7 @@ defmodule MyFirstPhoenix.Application do
       # Start a worker by calling: MyFirstPhoenix.Worker.start_link(arg)
       # {MyFirstPhoenix.Worker, arg}
 
-      {MyFirstPhoenix.RootGamesSupervisor, name: MyFirstPhoenix.RootGamesSupervisor}
+      MyFirstPhoenix.Tictactoe.Server
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
