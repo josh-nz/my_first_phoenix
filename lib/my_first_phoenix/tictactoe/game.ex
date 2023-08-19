@@ -25,6 +25,10 @@ defmodule MyFirstPhoenix.Tictactoe.Game do
     name |> via_tuple |> GenServer.call({:rewind, turn})
   end
 
+  def load_game(id) do
+    id |> via_tuple |> GenServer.call(:load_game)
+  end
+
 
   ## GenServer callbacks
 
@@ -70,6 +74,12 @@ defmodule MyFirstPhoenix.Tictactoe.Game do
 
     {:reply, new_turns, new_turns}
   end
+
+  @impl true
+  def handle_call(:load_game, _from, turns) do
+    {:reply, turns, turns}
+  end
+
 
   defp new_game() do
     board = %{
