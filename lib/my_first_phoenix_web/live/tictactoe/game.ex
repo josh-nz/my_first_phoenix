@@ -3,9 +3,14 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
 
   alias MyFirstPhoenix.Tictactoe.GameServer, as: G
   alias MyFirstPhoenix.Tictactoe.GameSupervisor
+  alias MyFirstPhoenix.Tictactoe.GameContext
 
   @impl true
   def mount(%{"id" => id} = _params, _session, socket) do
+    if connected?(socket) do
+      GameContext.subscribe(id)
+    end
+
     result = GameSupervisor.create_game(id)
 
     turns =
@@ -25,16 +30,20 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   def handle_event("reset", _, socket) do
     # {:noreply, socket}
     turns = G.new_game(socket.assigns.id)
+    Phoenix.PubSub.broadcast_from(MyFirstPhoenix.PubSub, self(), "tictactoe:#{socket.assigns.id}", {:game_history_changed, turns})
+
     {:noreply, assign(socket, %{
       current_turn: hd(turns),
       game_turns: turns
     })}
   end
 
+  @impl true
   def handle_event("square-clicked", %{"grid-id" => grid_id_str}, socket) do
     grid_id = String.to_integer(grid_id_str)
 
     turn = G.take_turn(socket.assigns.id, grid_id)
+    Phoenix.PubSub.broadcast_from(MyFirstPhoenix.PubSub, self(), "tictactoe:#{socket.assigns.id}", {:turn_taken, turn})
 
     {:noreply, assign(socket, %{
       current_turn: turn,
@@ -42,15 +51,31 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
     })}
   end
 
+  @impl true
   def handle_event("undo", %{"turn" => turn_str}, socket) do
     turn = String.to_integer(turn_str)
 
     turns = G.rewind(socket.assigns.id, turn)
+    Phoenix.PubSub.broadcast_from(MyFirstPhoenix.PubSub, self(), "tictactoe:#{socket.assigns.id}", {:game_history_changed, turns})
 
     {:noreply, assign(socket, %{
       current_turn: hd(turns),
       game_turns: turns
     })}
+  end
+
+  @impl true
+  def handle_info({:turn_taken, turn}, socket) do
+    {:noreply, assign(socket,
+      current_turn: turn,
+      game_turns: [turn | socket.assigns.game_turns])}
+  end
+
+  @impl true
+  def handle_info({:game_history_changed, turns}, socket) do
+    {:noreply, assign(socket,
+      current_turn: hd(turns),
+      game_turns: turns)}
   end
 
 

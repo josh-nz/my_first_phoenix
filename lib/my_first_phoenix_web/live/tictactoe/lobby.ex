@@ -4,6 +4,10 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket) do
+      GameContext.subscribe("lobby")
+    end
+
     games = GameContext.list_games()
     changeset = GameContext.game_changeset(%{})
     # changeset = GameContext.create_game(%{})
@@ -19,13 +23,15 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
   def handle_event("create_game", %{"game" => form_params}, socket) do
     case GameContext.create_game(form_params) do
       {:ok, changes} ->
-        # IO.puts("OK")
+        # IO.puts("OK clause")
         {:noreply,
          socket
          #|> hide_modal("create_game_modal")
+         # https://hexdocs.pm/phoenix_live_view/js-interop.html#handling-server-pushed-events
          |> put_flash(:info, "Game created")
-         |> assign(show: false)
-         |> update(:games, &([changes.title] ++ &1))}
+        #  |> assign(show: false)
+        #  |> update(:games, &([changes.title | &1]))
+        }
 
       {:error, %Ecto.Changeset{} = changeset} ->
         # IO.inspect(changeset)
@@ -44,6 +50,11 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
     # IO.inspect(changeset, label: "changeset")
 
     {:noreply, assign(socket, form: to_form(changeset, as: :game))}
+  end
+
+  @impl true
+  def handle_info({:new_game, game}, socket) do
+    {:noreply, update(socket, :games, &([game.title | &1]))}
   end
 
 
