@@ -1,6 +1,5 @@
 defmodule MyFirstPhoenix.Tictactoe.GameSupervisor do
   use DynamicSupervisor
-  alias MyFirstPhoenix.Tictactoe.Game
 
   def start_link(_opts) do
     DynamicSupervisor.start_link(__MODULE__, [], name: __MODULE__)
@@ -21,7 +20,7 @@ defmodule MyFirstPhoenix.Tictactoe.GameSupervisor do
     # will still be passed to the start_link(opts), but
     # opts will only be the string this time.
     # Refer also to the comments in MyFirstPhoenix.Tictactoe.Server.
-    DynamicSupervisor.start_child(__MODULE__, {Game, id})
+    DynamicSupervisor.start_child(__MODULE__, {MyFirstPhoenix.Tictactoe.GameServer, id})
   end
 
 

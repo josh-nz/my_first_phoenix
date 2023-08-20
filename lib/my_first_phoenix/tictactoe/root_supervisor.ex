@@ -1,4 +1,4 @@
-defmodule MyFirstPhoenix.Tictactoe.Server do
+defmodule MyFirstPhoenix.Tictactoe.RootSupervisor do
   use Supervisor
 
   def start_link(_opts) do
@@ -9,6 +9,7 @@ defmodule MyFirstPhoenix.Tictactoe.Server do
   def init(_init_arg) do
     children = [
       MyFirstPhoenix.Tictactoe.GameSupervisor,
+
       # https://hexdocs.pm/elixir/Supervisor.html#start_link/2
       # Second tuple element is passed to module.child_spec(arg),
       # which will find it's way to start_link(opts).

@@ -1,7 +1,7 @@
 defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   use MyFirstPhoenixWeb, :live_view
 
-  alias MyFirstPhoenix.Tictactoe.Game, as: G
+  alias MyFirstPhoenix.Tictactoe.GameServer, as: G
   alias MyFirstPhoenix.Tictactoe.GameSupervisor
 
   @impl true
@@ -58,7 +58,8 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   @impl true
   def render(assigns) do
     ~H"""
-    <h1 class="font-bold">Tic Tac Toe</h1>
+    <.header>Tic Tac Toe</.header>
+    <.back navigate={~p"/tictactoe"}>Return to lobby</.back>
 
     <.game_status game_status={@current_turn.status} player={@current_turn.next_player}  />
 
