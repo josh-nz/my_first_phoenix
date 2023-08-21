@@ -1,6 +1,13 @@
 # MyFirstPhoenix
 
-This is a playground app to learn Elixir and Phoenix, so it's full of random bits.
+This is a playground app to learn Elixir and Phoenix, so it's full of random bits. 
+
+Of most interest is an implementation of Tic Tac Toe, which started as a port of the React Tic Tac Toe tutorial. It includes full history and undo, PubSub communication between connected browsers, and a supervision tree to dynamically track individual games.
+
+Plenty is still missing as this is an ongoing, work in progress learning exercise, including any authentication and player turn enforcement.
+
+In the spirit of Joe Armstrong, I'm still in the "make it work" stage. Make it beautiful, both UI and code, will follow as I solidify my learnings, so please don't judge the current state of the code too much.
+
 
 To start your Phoenix server:
 
