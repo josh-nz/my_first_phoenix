@@ -23,8 +23,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   def handle_event("square-clicked", %{"grid-id" => grid_id_str}, socket) do
     grid_id = String.to_integer(grid_id_str)
 
-    turn = GameContext.take_turn(socket.assigns.id, grid_id)
-    Phoenix.PubSub.broadcast_from(MyFirstPhoenix.PubSub, self(), "tictactoe:#{socket.assigns.id}", {:turn_taken, turn})
+    turn = GameContext.take_turn(self(), socket.assigns.id, grid_id)
 
     {:noreply, assign(socket, %{
       current_turn: turn,
@@ -36,8 +35,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   def handle_event("undo", %{"to-turn" => to_turn_str}, socket) do
     to_turn = String.to_integer(to_turn_str)
 
-    turns = GameContext.rewind(socket.assigns.id, to_turn)
-    Phoenix.PubSub.broadcast_from(MyFirstPhoenix.PubSub, self(), "tictactoe:#{socket.assigns.id}", {:game_history_changed, turns})
+    turns = GameContext.rewind(self(), socket.assigns.id, to_turn)
 
     {:noreply, assign(socket, %{
       current_turn: hd(turns),

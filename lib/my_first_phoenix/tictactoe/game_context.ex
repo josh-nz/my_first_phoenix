@@ -1,9 +1,10 @@
 defmodule MyFirstPhoenix.Tictactoe.GameContext do
   alias Phoenix.PubSub
 
-  alias MyFirstPhoenix.Tictactoe.GameSupervisor
-  alias MyFirstPhoenix.Tictactoe.GameServer
   alias MyFirstPhoenix.Tictactoe.Game
+  alias MyFirstPhoenix.Tictactoe.GameServer
+  alias MyFirstPhoenix.Tictactoe.GameSupervisor
+
 
   def list_games() do
     GameSupervisor.list_games()
@@ -18,12 +19,16 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
     GameServer.game_metadata(game_id)
   end
 
-  def take_turn(game_id, grid_id) do
-    GameServer.take_turn(game_id, grid_id)
+  def take_turn(caller, game_id, grid_id) do
+    turn = GameServer.take_turn(game_id, grid_id)
+    Phoenix.PubSub.broadcast_from(MyFirstPhoenix.PubSub, caller, "tictactoe:#{game_id}", {:turn_taken, turn})
+    turn
   end
 
-  def rewind(game_id, to_turn) do
-    GameServer.rewind(game_id, to_turn)
+  def rewind(caller, game_id, to_turn) do
+    turns = GameServer.rewind(game_id, to_turn)
+    Phoenix.PubSub.broadcast_from(MyFirstPhoenix.PubSub, caller, "tictactoe:#{game_id}", {:game_history_changed, turns})
+    turns
   end
 
 
@@ -37,7 +42,7 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
 
   def create_game(attrs) do
     game_changeset(%{}, attrs)
-      |> validate_game
+      |> validate_game()
       # Emulate a repo action, returns appropriate {:ok, ...} or {:error, ...} tuple.
       |> Ecto.Changeset.apply_action(:insert)
       |> GameSupervisor.create_game()
