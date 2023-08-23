@@ -8,12 +8,8 @@ defmodule MyFirstPhoenix.Tictactoe.RootSupervisor do
   @impl true
   def init(_init_arg) do
     children = [
-      MyFirstPhoenix.Tictactoe.GameSupervisor,
-
-      # https://hexdocs.pm/elixir/Supervisor.html#start_link/2
-      # Second tuple element is passed to module.child_spec(arg),
-      # which will find it's way to start_link(opts).
-      {Registry, keys: :unique, name: MyFirstPhoenix.Tictactoe.GameRegistry}
+      {Registry, keys: :unique, name: MyFirstPhoenix.Tictactoe.GameRegistry},
+      MyFirstPhoenix.Tictactoe.GameSupervisor
     ]
 
     Supervisor.init(children, strategy: :one_for_all)

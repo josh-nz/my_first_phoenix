@@ -9,24 +9,29 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
 
   ## Client API
 
-  def start_link(name) do
-    GenServer.start_link(__MODULE__, [], name: via_tuple(name))
+
+  def start_link(metadata) do
+    GenServer.start_link(__MODULE__, metadata, name: via_tuple(metadata.game_id))
   end
 
-  def new_game(name) do
-    name |> via_tuple |> GenServer.call(:new_game)
+  def new_game(game_id) do
+    game_id |> via_tuple() |> GenServer.call(:new_game)
   end
 
-  def take_turn(name, grid_id) do
-    name |> via_tuple |> GenServer.call({:take_turn, grid_id})
+  def take_turn(game_id, grid_id) do
+    game_id |> via_tuple() |> GenServer.call({:take_turn, grid_id})
   end
 
-  def rewind(name, turn) do
-    name |> via_tuple |> GenServer.call({:rewind, turn})
+  def rewind(game_id, turn) do
+    game_id |> via_tuple() |> GenServer.call({:rewind, turn})
   end
 
-  def load_game(id) do
-    id |> via_tuple |> GenServer.call(:load_game)
+  def load_game(game_id) do
+    game_id |> via_tuple() |> GenServer.call(:load_game)
+  end
+
+  def game_metadata(game_id) do
+    game_id |> via_tuple() |> GenServer.call(:meta_data)
   end
 
 
@@ -80,6 +85,11 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
     {:reply, turns, turns}
   end
 
+  @impl true
+  def handle_call(:meta_data, _from, state) do
+
+  end
+
 
   defp new_game() do
     board = %{
@@ -130,7 +140,7 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
     end
   end
 
-  defp via_tuple(name) do
-    {:via, Registry, {MyFirstPhoenix.Tictactoe.GameRegistry, name}}
+  defp via_tuple(game_id) do
+    {:via, Registry, {MyFirstPhoenix.Tictactoe.GameRegistry, game_id}}
   end
 end

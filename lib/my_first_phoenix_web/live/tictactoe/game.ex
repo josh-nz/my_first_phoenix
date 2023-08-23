@@ -2,25 +2,25 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   use MyFirstPhoenixWeb, :live_view
 
   alias MyFirstPhoenix.Tictactoe.GameServer, as: G
-  alias MyFirstPhoenix.Tictactoe.GameSupervisor
   alias MyFirstPhoenix.Tictactoe.GameContext
 
   @impl true
-  def mount(%{"id" => id} = _params, _session, socket) do
+  def mount(%{"game_id" => game_id_str} = _params, _session, socket) do
+    game_id = String.to_integer(game_id_str)
     if connected?(socket) do
-      GameContext.subscribe(id)
+      GameContext.subscribe(game_id)
     end
 
-    result = GameSupervisor.create_game(id)
+    #result = GameSupervisor.create_game(id)
 
-    turns =
-      case result do
-        {:ok, _} -> G.new_game(id)
-        {:error, {:already_started, _pid}} -> G.load_game(id)
-      end
+    turns = G.new_game(game_id)
+      # case result do
+      #   {:ok, _} -> G.new_game(game_id)
+      #   {:error, {:already_started, _pid}} -> G.load_game(game_id)
+      # end
 
     {:ok, assign(socket, %{
-      id: id,
+      id: game_id,
       current_turn: hd(turns),
       game_turns: turns
     })}
@@ -83,7 +83,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>Tic Tac Toe</.header>
+    <.header>Playing game <%= @id %></.header>
     <.back navigate={~p"/tictactoe"}>Return to lobby</.back>
 
     <.game_status game_status={@current_turn.status} player={@current_turn.next_player}  />

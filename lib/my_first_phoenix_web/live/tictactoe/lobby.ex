@@ -10,13 +10,25 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
 
     games = GameContext.list_games()
     changeset = GameContext.game_changeset(%{})
-    # changeset = GameContext.create_game(%{})
 
     {:ok, assign(socket,
       games: games,
       show: false,
       form: to_form(changeset, as: :game))
     }
+  end
+
+  @impl true
+  def handle_event("validate_create_game", %{"game" => form_params}, socket) do
+
+    changeset = %{}
+      |> GameContext.game_changeset(form_params)
+      |> GameContext.validate_game
+      |> Map.put(:action, :validate)
+
+    # IO.inspect(changeset, label: "changeset")
+
+    {:noreply, assign(socket, form: to_form(changeset, as: :game))}
   end
 
   @impl true
@@ -40,21 +52,8 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
   end
 
   @impl true
-  def handle_event("validate_create_game", %{"game" => form_params}, socket) do
-
-    changeset = %{}
-      |> GameContext.game_changeset(form_params)
-      |> GameContext.validate_game
-      |> Map.put(:action, :validate)
-
-    # IO.inspect(changeset, label: "changeset")
-
-    {:noreply, assign(socket, form: to_form(changeset, as: :game))}
-  end
-
-  @impl true
   def handle_info({:new_game, game}, socket) do
-    {:noreply, update(socket, :games, &([game.title | &1]))}
+    {:noreply, update(socket, :games, &([game | &1]))}
   end
 
 

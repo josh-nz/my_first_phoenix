@@ -23,7 +23,7 @@ defmodule MyFirstPhoenixWeb.Router do
     live "/counter", Counter
     live "/button", Button
     live "/tictactoe", Tictactoe.Lobby
-    live "/tictactoe/:id", Tictactoe.Game
+    live "/tictactoe/:game_id", Tictactoe.Game
 
     live "/rendertest", RenderTest
   end
