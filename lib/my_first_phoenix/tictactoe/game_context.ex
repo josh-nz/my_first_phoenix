@@ -8,7 +8,7 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
 
   def list_games() do
     GameSupervisor.list_games()
-      # |> Enum.map(game_metadata)
+      |> Enum.map(&game_metadata/1)
   end
 
   def load_game(game_id) do
@@ -41,10 +41,11 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
   end
 
   def create_game(attrs) do
-    game_changeset(%{}, attrs)
+    game_changeset(%Game{}, attrs)
       |> validate_game()
       # Emulate a repo action, returns appropriate {:ok, ...} or {:error, ...} tuple.
       |> Ecto.Changeset.apply_action(:insert)
+      |> IO.inspect()
       |> GameSupervisor.create_game()
       |> broadcast(:new_game)
   end

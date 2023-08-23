@@ -1,5 +1,7 @@
 defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
   use MyFirstPhoenixWeb, :live_view
+
+  alias MyFirstPhoenix.Tictactoe.Game
   alias MyFirstPhoenix.Tictactoe.GameContext
 
   @impl true
@@ -9,7 +11,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
     end
 
     games = GameContext.list_games()
-    changeset = GameContext.game_changeset(%{})
+    changeset = GameContext.game_changeset(%Game{})
 
     {:ok, assign(socket,
       games: games,
@@ -20,7 +22,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
   @impl true
   def handle_event("validate_create_game", %{"game" => form_params}, socket) do
 
-    changeset = %{}
+    changeset = %Game{}
       |> GameContext.game_changeset(form_params)
       |> GameContext.validate_game
       |> Map.put(:action, :validate)
@@ -78,7 +80,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
     </.modal>
 
     <ul :for={g <- @games}>
-      <li><.link navigate={~p"/tictactoe/#{g}"}><%= g %></.link></li>
+      <li><.link navigate={~p"/tictactoe/#{g.game_id}"}><%= g.title %></.link></li>
     </ul>
     """
   end

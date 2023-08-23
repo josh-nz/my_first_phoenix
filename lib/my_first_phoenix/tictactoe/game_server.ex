@@ -1,6 +1,8 @@
 defmodule MyFirstPhoenix.Tictactoe.GameServer do
   use GenServer, restart: :temporary
 
+  alias MyFirstPhoenix.Tictactoe.Game
+
   defmodule Turn do
     @enforce_keys [:turn, :board, :next_player, :status, :log, :time_stamp]
     defstruct [:turn, :board, :next_player, :status, :log, :time_stamp]
@@ -10,8 +12,8 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
   ## Client API
 
 
-  def start_link(metadata) do
-    GenServer.start_link(__MODULE__, metadata, name: via_tuple(metadata.game_id))
+  def start_link(%Game{} = args) do
+    GenServer.start_link(__MODULE__, args, name: via_tuple(args.game_id))
   end
 
   def game_metadata(game_id) do
@@ -34,17 +36,17 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
   ## GenServer callbacks
 
   @impl true
-  def init(init_arg) do
+  def init(%Game{} = init_arg) do
     {:ok, %{metadata: init_arg, turns: reset_game()}}
   end
 
   @impl true
-  def handle_call(:meta_data, _from, state) do
-
+  def handle_call(:meta_data, _from, %{metadata: %Game{} = metadata} = state) do
+    {:reply, metadata, state}
   end
 
   @impl true
-  def handle_call(:load_game, _from, %{turns: turns} = state), do: {:reply, turns, state}
+  def handle_call(:load_game, _from, state), do: {:reply, state, state}
 
 
   @impl true

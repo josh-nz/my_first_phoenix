@@ -1,5 +1,7 @@
 defmodule MyFirstPhoenix.Tictactoe.GameSupervisor do
   use DynamicSupervisor
+
+  alias MyFirstPhoenix.Tictactoe.Game
   alias MyFirstPhoenix.Tictactoe.GameSupervisor.Storage
 
 
@@ -18,8 +20,8 @@ defmodule MyFirstPhoenix.Tictactoe.GameSupervisor do
   end
 
   def create_game({:error, _} = error), do: error
-  def create_game({:ok, game}) do
-    game_id = Storage.next_game_id()
+  def create_game({:ok, %Game{} = game}) do
+    game_metadata = %{game | game_id: Storage.next_game_id()}
 
     child =
       DynamicSupervisor.start_child(
@@ -28,10 +30,11 @@ defmodule MyFirstPhoenix.Tictactoe.GameSupervisor do
         # https://hexdocs.pm/elixir/Supervisor.html#start_link/2
         # Second tuple element is passed to module.child_spec(arg),
         # which will in turn pass it to module.start_link(opts).
-        {MyFirstPhoenix.Tictactoe.GameServer, Map.put(game, :game_id, game_id)})
+        {MyFirstPhoenix.Tictactoe.GameServer, game_metadata}
+      )
 
     case child do
-      {:ok, _pid} -> {:ok, game_id}
+      {:ok, _pid} -> {:ok, game_metadata}
       error -> error
     end
   end

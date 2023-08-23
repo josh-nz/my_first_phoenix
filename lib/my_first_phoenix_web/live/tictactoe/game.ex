@@ -1,5 +1,7 @@
 defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   use MyFirstPhoenixWeb, :live_view
+
+  alias MyFirstPhoenix.Tictactoe.Game
   alias MyFirstPhoenix.Tictactoe.GameContext
 
   @impl true
@@ -10,10 +12,10 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
       GameContext.subscribe(game_id)
     end
 
-    turns = GameContext.load_game(game_id)
+    %{metadata: %Game{} = meta, turns: turns} = GameContext.load_game(game_id)
 
     {:ok, assign(socket, %{
-      id: game_id,
+      meta: meta,
       current_turn: hd(turns),
       game_turns: turns
     })}
@@ -23,7 +25,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   def handle_event("square-clicked", %{"grid-id" => grid_id_str}, socket) do
     grid_id = String.to_integer(grid_id_str)
 
-    turn = GameContext.take_turn(self(), socket.assigns.id, grid_id)
+    turn = GameContext.take_turn(self(), socket.assigns.meta.game_id, grid_id)
 
     {:noreply, assign(socket, %{
       current_turn: turn,
@@ -35,7 +37,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   def handle_event("undo", %{"to-turn" => to_turn_str}, socket) do
     to_turn = String.to_integer(to_turn_str)
 
-    turns = GameContext.rewind(self(), socket.assigns.id, to_turn)
+    turns = GameContext.rewind(self(), socket.assigns.meta.game_id, to_turn)
 
     {:noreply, assign(socket, %{
       current_turn: hd(turns),
@@ -62,8 +64,15 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>Playing game <%= @id %></.header>
     <.back navigate={~p"/tictactoe"}>Return to lobby</.back>
+    <.header>Playing game <%= @meta.title %></.header>
+
+    <dl>
+      <dt>Player X: </dt>
+      <dd><%= @meta.player_x %></dd>
+      <dt>Player O: </dt>
+      <dd><%= @meta.player_o %></dd>
+    </dl>
 
     <.game_status game_status={@current_turn.status} player={@current_turn.next_player}  />
 
