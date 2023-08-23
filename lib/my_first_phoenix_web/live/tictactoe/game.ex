@@ -5,6 +5,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   @impl true
   def mount(%{"game_id" => game_id_str} = _params, _session, socket) do
     game_id = String.to_integer(game_id_str)
+
     if connected?(socket) do
       GameContext.subscribe(game_id)
     end

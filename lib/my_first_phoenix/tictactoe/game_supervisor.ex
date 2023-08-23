@@ -19,21 +19,15 @@ defmodule MyFirstPhoenix.Tictactoe.GameSupervisor do
 
   def create_game({:error, _} = error), do: error
   def create_game({:ok, game}) do
-    # Here, id is not a keyword list, but a string. It
-    # will still be passed to the start_link(opts), but
-    # opts will only be the string this time.
-    # Refer also to the comments in MyFirstPhoenix.Tictactoe.GameServer.
-
-    # This should be the GameServer docs, but unsure where it acutally goes.
-    # It was in the incorrect place, so is here for right now.
-    # https://hexdocs.pm/elixir/Supervisor.html#start_link/2
-    # Second tuple element is passed to module.child_spec(arg),
-    # which will find it's way to start_link(opts).
-
     game_id = Storage.next_game_id()
+
     child =
       DynamicSupervisor.start_child(
         __MODULE__,
+
+        # https://hexdocs.pm/elixir/Supervisor.html#start_link/2
+        # Second tuple element is passed to module.child_spec(arg),
+        # which will in turn pass it to module.start_link(opts).
         {MyFirstPhoenix.Tictactoe.GameServer, Map.put(game, :game_id, game_id)})
 
     case child do

@@ -13,7 +13,6 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
 
     {:ok, assign(socket,
       games: games,
-      show: false,
       form: to_form(changeset, as: :game))
     }
   end
@@ -65,7 +64,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
     <div :if={length(@games) == 0}>No games yet, why not start one?</div>
     <div><.link phx-click={show_modal("create_game_modal")}>Create new game</.link></div>
 
-    <.modal id="create_game_modal" show={@show}>
+    <.modal id="create_game_modal">
       <.header>Create new game</.header>
       <%!-- https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#form/1-examples-inside-liveview --%>
       <.simple_form for={@form} phx-change="validate_create_game" phx-submit="create_game">
