@@ -1,7 +1,5 @@
 defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   use MyFirstPhoenixWeb, :live_view
-
-  alias MyFirstPhoenix.Tictactoe.GameServer, as: G
   alias MyFirstPhoenix.Tictactoe.GameContext
 
   @impl true
@@ -11,13 +9,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
       GameContext.subscribe(game_id)
     end
 
-    #result = GameSupervisor.create_game(id)
-
-    turns = G.new_game(game_id)
-      # case result do
-      #   {:ok, _} -> G.new_game(game_id)
-      #   {:error, {:already_started, _pid}} -> G.load_game(game_id)
-      # end
+    turns = GameContext.load_game(game_id)
 
     {:ok, assign(socket, %{
       id: game_id,
@@ -27,35 +19,23 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   end
 
   @impl true
-  def handle_event("reset", _, socket) do
-    # {:noreply, socket}
-    turns = G.new_game(socket.assigns.id)
-    Phoenix.PubSub.broadcast_from(MyFirstPhoenix.PubSub, self(), "tictactoe:#{socket.assigns.id}", {:game_history_changed, turns})
-
-    {:noreply, assign(socket, %{
-      current_turn: hd(turns),
-      game_turns: turns
-    })}
-  end
-
-  @impl true
   def handle_event("square-clicked", %{"grid-id" => grid_id_str}, socket) do
     grid_id = String.to_integer(grid_id_str)
 
-    turn = G.take_turn(socket.assigns.id, grid_id)
+    turn = GameContext.take_turn(socket.assigns.id, grid_id)
     Phoenix.PubSub.broadcast_from(MyFirstPhoenix.PubSub, self(), "tictactoe:#{socket.assigns.id}", {:turn_taken, turn})
 
     {:noreply, assign(socket, %{
       current_turn: turn,
-      game_turns: [turn] ++ socket.assigns.game_turns
+      game_turns: [turn | socket.assigns.game_turns]
     })}
   end
 
   @impl true
-  def handle_event("undo", %{"turn" => turn_str}, socket) do
-    turn = String.to_integer(turn_str)
+  def handle_event("undo", %{"to-turn" => to_turn_str}, socket) do
+    to_turn = String.to_integer(to_turn_str)
 
-    turns = G.rewind(socket.assigns.id, turn)
+    turns = GameContext.rewind(socket.assigns.id, to_turn)
     Phoenix.PubSub.broadcast_from(MyFirstPhoenix.PubSub, self(), "tictactoe:#{socket.assigns.id}", {:game_history_changed, turns})
 
     {:noreply, assign(socket, %{
@@ -110,7 +90,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
     <div>
       <p :if={@game_status == :winner}>Game over. Winner was player <%= @player %>.</p>
       <p :if={@game_status == :stalemate}>Game over, stalemate.</p>
-      <.button phx-click="reset">New game</.button>
+      <.button phx-click="undo" phx-value-to-turn="0">New game</.button>
     </div>
     """
   end
@@ -150,7 +130,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
       <h2 class="font-bold">Game history</h2>
       <dl class="">
         <%= for h <- @history do %>
-          <a phx-click="undo" phx-value-turn={h.turn}
+          <a phx-click="undo" phx-value-to-turn={h.turn}
              class="cursor-pointer hover:bg-zinc-100 flex gap-4">
             <dt>Turn <%= h.turn %></dt>
             <dd class=""><%= Calendar.strftime(h.time_stamp, "%X") %></dd>

@@ -10,9 +10,22 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
       # |> Enum.map(game_metadata)
   end
 
+  def load_game(game_id) do
+    GameServer.load_game(game_id)
+  end
+
   def game_metadata(game_id) do
     GameServer.game_metadata(game_id)
   end
+
+  def take_turn(game_id, grid_id) do
+    GameServer.take_turn(game_id, grid_id)
+  end
+
+  def rewind(game_id, to_turn) do
+    GameServer.rewind(game_id, to_turn)
+  end
+
 
   def game_changeset(game, attrs \\ %{}) do
     Game.changeset(game, attrs)

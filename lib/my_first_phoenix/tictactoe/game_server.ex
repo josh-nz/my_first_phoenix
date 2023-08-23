@@ -14,9 +14,17 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
     GenServer.start_link(__MODULE__, metadata, name: via_tuple(metadata.game_id))
   end
 
-  def new_game(game_id) do
-    game_id |> via_tuple() |> GenServer.call(:new_game)
+  def game_metadata(game_id) do
+    game_id |> via_tuple() |> GenServer.call(:meta_data)
   end
+
+  def load_game(game_id) do
+    game_id |> via_tuple() |> GenServer.call(:load_game)
+  end
+
+  # def new_game(game_id) do
+  #   game_id |> via_tuple() |> GenServer.call(:new_game)
+  # end
 
   def take_turn(game_id, grid_id) do
     game_id |> via_tuple() |> GenServer.call({:take_turn, grid_id})
@@ -26,27 +34,35 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
     game_id |> via_tuple() |> GenServer.call({:rewind, turn})
   end
 
-  def load_game(game_id) do
-    game_id |> via_tuple() |> GenServer.call(:load_game)
-  end
-
-  def game_metadata(game_id) do
-    game_id |> via_tuple() |> GenServer.call(:meta_data)
-  end
-
 
   ## GenServer callbacks
 
   @impl true
   def init(_init_arg) do
-    {:ok, []}
+    {:ok, new_game()}
   end
 
   @impl true
-  def handle_call(:new_game, _from, _turns) do
-    game = new_game()
-    {:reply, game, game}
+  def handle_call(:meta_data, _from, state) do
+
   end
+
+  @impl true
+  def handle_call(:load_game, _from, turns), do: {:reply, turns, turns}
+
+  # @impl true
+  # def handle_call(:load_game, _from, [] = turns) do
+  #   game = new_game()
+  #   {:reply, game, game}
+  # end
+
+
+
+  # @impl true
+  # def handle_call(:new_game, _from, _turns) do
+  #   game = new_game()
+  #   {:reply, game, game}
+  # end
 
   @impl true
   def handle_call({:take_turn, grid_id}, _from, turns) do
@@ -78,16 +94,6 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
       end
 
     {:reply, new_turns, new_turns}
-  end
-
-  @impl true
-  def handle_call(:load_game, _from, turns) do
-    {:reply, turns, turns}
-  end
-
-  @impl true
-  def handle_call(:meta_data, _from, state) do
-
   end
 
 
