@@ -22,10 +22,6 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
     game_id |> via_tuple() |> GenServer.call(:load_game)
   end
 
-  # def new_game(game_id) do
-  #   game_id |> via_tuple() |> GenServer.call(:new_game)
-  # end
-
   def take_turn(game_id, grid_id) do
     game_id |> via_tuple() |> GenServer.call({:take_turn, grid_id})
   end
@@ -38,8 +34,8 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
   ## GenServer callbacks
 
   @impl true
-  def init(_init_arg) do
-    {:ok, new_game()}
+  def init(init_arg) do
+    {:ok, %{metadata: init_arg, turns: reset_game()}}
   end
 
   @impl true
@@ -48,24 +44,11 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
   end
 
   @impl true
-  def handle_call(:load_game, _from, turns), do: {:reply, turns, turns}
+  def handle_call(:load_game, _from, %{turns: turns} = state), do: {:reply, turns, state}
 
-  # @impl true
-  # def handle_call(:load_game, _from, [] = turns) do
-  #   game = new_game()
-  #   {:reply, game, game}
-  # end
-
-
-
-  # @impl true
-  # def handle_call(:new_game, _from, _turns) do
-  #   game = new_game()
-  #   {:reply, game, game}
-  # end
 
   @impl true
-  def handle_call({:take_turn, grid_id}, _from, turns) do
+  def handle_call({:take_turn, grid_id}, _from, %{turns: turns} = state) do
     %Turn{board: board, next_player: player} = hd(turns)
     new_board = Map.put(board, grid_id, player)
 
@@ -80,11 +63,11 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
       time_stamp: nz_now()
     }
 
-    {:reply, next_turn, [next_turn] ++ turns}
+    {:reply, next_turn, Map.put(state, :turns, [next_turn] ++ turns)}
   end
 
   @impl true
-  def handle_call({:rewind, turn}, _from, turns) do
+  def handle_call({:rewind, turn}, _from, %{turns: turns} = state) do
     current_turn = length(turns)
 
     new_turns =
@@ -93,11 +76,11 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
         _ -> Enum.slice(turns, (current_turn - turn - 1)..9)
       end
 
-    {:reply, new_turns, new_turns}
+    {:reply, new_turns, Map.put(state, :turns, new_turns)}
   end
 
 
-  defp new_game() do
+  defp reset_game() do
     board = %{
       1 => "", 2 => "", 3 => "",
       4 => "", 5 => "", 6 => "",
