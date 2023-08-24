@@ -12,8 +12,8 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
   ## Client API
 
 
-  def start_link(%Game{} = args) do
-    GenServer.start_link(__MODULE__, args, name: via_tuple(args.game_id))
+  def start_link(%Game{} = meta) do
+    GenServer.start_link(__MODULE__, meta, name: via_tuple(meta.game_id))
   end
 
   def game_metadata(game_id) do
@@ -79,6 +79,13 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
       end
 
     {:reply, new_turns, Map.put(state, :turns, new_turns)}
+  end
+
+  @impl true
+  def handle_info(msg, state) do
+    require Logger
+    Logger.debug("Unexpected message in #{__MODULE__}: #{inspect(msg)}")
+    {:noreply, state}
   end
 
 

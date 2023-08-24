@@ -12,7 +12,12 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
   end
 
   def load_game(game_id) do
-    GameServer.load_game(game_id)
+    try do
+      {:ok, GameServer.load_game(game_id)}
+    catch
+      :exit, e ->
+        {:error, e}
+      end
   end
 
   def game_metadata(game_id) do

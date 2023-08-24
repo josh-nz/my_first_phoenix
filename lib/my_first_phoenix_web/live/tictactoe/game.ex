@@ -12,13 +12,23 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
       GameContext.subscribe(game_id)
     end
 
-    %{metadata: %Game{} = meta, turns: turns} = GameContext.load_game(game_id)
+    case GameContext.load_game(game_id) do
+      {:ok, %{metadata: %Game{} = meta, turns: turns}} ->
+        {:ok, assign(socket, %{
+          meta: meta,
+          current_turn: hd(turns),
+          game_turns: turns
+        })}
+      {:error, _} ->
+        {:ok, push_navigate(socket, to: ~p"/tictactoe/")}
+    end
+    # %{metadata: %Game{} = meta, turns: turns} = GameContext.load_game(game_id)
 
-    {:ok, assign(socket, %{
-      meta: meta,
-      current_turn: hd(turns),
-      game_turns: turns
-    })}
+    # {:ok, assign(socket, %{
+    #   meta: meta,
+    #   current_turn: hd(turns),
+    #   game_turns: turns
+    # })}
   end
 
   @impl true
