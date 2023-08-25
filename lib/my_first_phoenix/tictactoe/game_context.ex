@@ -45,7 +45,11 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
     Game.validate(changeset)
   end
 
-  def create_game(params) do
+  def create_game(current_user, params) do
+    if (current_user == nil) do
+      raise("Unauthenticated user cannot create game.")
+    end
+
     game_changeset(%Game{}, params)
       |> validate_game()
       # Emulate a repo action, returns appropriate {:ok, ...} or {:error, ...} tuple.

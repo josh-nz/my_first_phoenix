@@ -35,7 +35,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
 
   @impl true
   def handle_event("create_game", %{"game" => form_params}, socket) do
-    case GameContext.create_game(form_params) do
+    case GameContext.create_game(socket.assigns.current_user, form_params) do
       {:ok, changes} ->
         # IO.puts("OK clause")
         {:noreply,
