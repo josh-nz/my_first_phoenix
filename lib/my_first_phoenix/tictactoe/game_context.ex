@@ -37,16 +37,16 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
   end
 
 
-  def game_changeset(game, attrs \\ %{}) do
-    Game.changeset(game, attrs)
+  def game_changeset(game, params \\ %{}) do
+    Game.changeset(game, params)
   end
 
   def validate_game(changeset) do
     Game.validate(changeset)
   end
 
-  def create_game(attrs) do
-    game_changeset(%Game{}, attrs)
+  def create_game(params) do
+    game_changeset(%Game{}, params)
       |> validate_game()
       # Emulate a repo action, returns appropriate {:ok, ...} or {:error, ...} tuple.
       |> Ecto.Changeset.apply_action(:insert)

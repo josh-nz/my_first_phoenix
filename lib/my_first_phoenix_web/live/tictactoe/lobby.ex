@@ -5,7 +5,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
   alias MyFirstPhoenix.Tictactoe.GameContext
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     if connected?(socket) do
       GameContext.subscribe("lobby")
     end
@@ -14,6 +14,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
     changeset = GameContext.game_changeset(%Game{})
 
     {:ok, assign(socket,
+      current_user: session["current_user"],
       games: games,
       form: to_form(changeset, as: :game))
     }
@@ -62,6 +63,8 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
   def render(assigns) do
     ~H"""
     <.header>Welcome to the Tic Tac Toe lobby</.header>
+
+    <h2 :if={@current_user}>Welcome, <%= @current_user.name %></h2>
 
     <div :if={length(@games) == 0}>No games yet, why not start one?</div>
     <div><.link phx-click={show_modal("create_game_modal")}>Create new game</.link></div>

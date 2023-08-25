@@ -19,6 +19,11 @@ defmodule MyFirstPhoenixWeb.Router do
 
     get "/", PageController, :home
     get "/chat", PageController, :chat
+    get "/session", PageController, :session
+
+    get "/sign_in", AuthenticationController, :sign_in
+    post "/sign_in", AuthenticationController, :do_sign_in
+    get "/sign_out", AuthenticationController, :sign_out
 
     live "/counter", Counter
     live "/button", Button
