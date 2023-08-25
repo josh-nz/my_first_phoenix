@@ -11,7 +11,6 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
 
   ## Client API
 
-
   def start_link(%Game{} = meta) do
     GenServer.start_link(__MODULE__, meta, name: via_tuple(meta.game_id))
   end

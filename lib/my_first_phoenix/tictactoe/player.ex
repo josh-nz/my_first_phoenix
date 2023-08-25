@@ -10,8 +10,8 @@ defmodule MyFirstPhoenix.Tictactoe.Player do
 
   def validate(changeset) do
     changeset
-      |> validate_required([:name])
-      |> validate_length(:name, max: 50)
-      |> apply_action(:insert)
+    |> validate_required([:name])
+    |> validate_length(:name, max: 50)
+    |> apply_action(:insert)
   end
 end

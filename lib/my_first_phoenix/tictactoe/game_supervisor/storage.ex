@@ -6,8 +6,7 @@ defmodule MyFirstPhoenix.Tictactoe.GameSupervisor.Storage do
   end
 
   def next_game_id() do
-    id = Agent.get_and_update(__MODULE__, &({&1, &1+1}))
-    IO.inspect(id, label: "game id ")
-    id
+    Agent.get_and_update(__MODULE__, &({&1, &1+1}))
+    # |> IO.inspect(id, label: "game id ")
   end
 end

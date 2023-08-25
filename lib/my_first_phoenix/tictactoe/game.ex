@@ -10,8 +10,10 @@ defmodule MyFirstPhoenix.Tictactoe.Game do
 
   def validate(changeset) do
     changeset
-      |> validate_required([:title])
-      |> validate_length(:title, max: 50)
-      |> validate_length(:description, max: 200)
+    |> validate_required([:title])
+    |> validate_length(:title, max: 50)
+    |> validate_length(:description, max: 200)
+    # Emulate a repo action, returns appropriate {:ok, ...} or {:error, ...} tuple.
+    |> apply_action(:insert)
   end
 end

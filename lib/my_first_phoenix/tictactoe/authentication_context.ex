@@ -7,7 +7,7 @@ defmodule MyFirstPhoenix.Tictactoe.AuthenticationContext do
 
   def sign_in(params) do
     %Player{}
-      |> Player.changeset(params)
-      |> Player.validate()
+    |> Player.changeset(params)
+    |> Player.validate()
   end
 end

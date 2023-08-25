@@ -37,7 +37,6 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
   def handle_event("create_game", %{"game" => form_params}, socket) do
     case GameContext.create_game(socket.assigns.current_user, form_params) do
       {:ok, changes} ->
-        # IO.puts("OK clause")
         {:noreply,
          socket
          #|> hide_modal("create_game_modal")
@@ -48,7 +47,6 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
         }
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        # IO.inspect(changeset)
         {:noreply, assign(socket, form: to_form(changeset, as: :game))}
     end
   end
