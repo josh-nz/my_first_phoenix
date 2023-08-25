@@ -64,10 +64,20 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
     ~H"""
     <.header>Welcome to the Tic Tac Toe lobby</.header>
 
-    <h2 :if={@current_user}>Welcome, <%= @current_user.name %></h2>
+    <div :if={@current_user}>
+      <h2>
+        Welcome, <%= @current_user.name %>
+        <.link href={~p"/sign_out"}>Sign out</.link>
+      </h2>
+      <div><.link phx-click={show_modal("create_game_modal")}>Create new game</.link></div>
+    </div>
+
+    <div :if={@current_user == nil}>
+      <h2><.link href={~p"/sign_in"}>Sign in</.link></h2>
+      <div>Sign in to create or join a game</div>
+    </div>
 
     <div :if={length(@games) == 0}>No games yet, why not start one?</div>
-    <div><.link phx-click={show_modal("create_game_modal")}>Create new game</.link></div>
 
     <.modal id="create_game_modal">
       <.header>Create new game</.header>
