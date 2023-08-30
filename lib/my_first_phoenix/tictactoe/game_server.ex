@@ -31,6 +31,11 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
     game_id |> via_tuple() |> GenServer.call({:rewind, turn})
   end
 
+  def add_player(game_id, player) do
+    game_id |> via_tuple() |> GenServer.call({:add_player, player})
+  end
+
+
 
   ## GenServer callbacks
 
@@ -78,6 +83,21 @@ defmodule MyFirstPhoenix.Tictactoe.GameServer do
       end
 
     {:reply, new_turns, Map.put(state, :turns, new_turns)}
+  end
+
+  @impl true
+  def handle_call({:add_player, player}, _from, %{metadata: meta} = state) do
+    result =
+      cond do
+        meta.player_x == nil -> {:ok, %Game{ meta | player_x: player}}
+        meta.player_o == nil -> {:ok, %Game{ meta | player_o: player}}
+        true -> {:error, "Game is full"}
+      end
+
+    case result do
+      {:ok, meta} -> {:reply, result, Map.put(state, :metadata, meta)}
+      {:error, _} -> {:reply, result, state}
+    end
   end
 
   @impl true

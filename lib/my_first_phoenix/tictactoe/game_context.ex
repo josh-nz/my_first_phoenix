@@ -29,13 +29,24 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
       raise("Unauthenticated user cannot create game.")
     end
 
-    #atom = Enum.random([:player_x, :player_o])
-    %Game{player_x: current_user}
+    # params = Map.put(params, Enum.random(["player_x", "player_o"]), current_user)
+    %Game{}
+    |> Map.put(Enum.random([:player_x, :player_o]), current_user)
     |> Game.changeset(params)
+    |> IO.inspect()
     |> Ecto.Changeset.apply_action(:create_game)
-    # |> IO.inspect()
     |> GameSupervisor.create_game()
-    |> broadcast(:new_game)
+    |> broadcast(:new_game, "lobby")
+  end
+
+  def join_game(game_id, current_user) do
+    if (current_user == nil) do
+      raise("Unauthenticated user cannot join game.")
+    end
+
+    GameServer.add_player(game_id, current_user)
+    |> broadcast(:player_added, "lobby")
+    |> broadcast(:player_added, game_id)
   end
 
   def take_turn(caller, game_id, grid_id) do
@@ -56,9 +67,9 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
     PubSub.subscribe(MyFirstPhoenix.PubSub, "tictactoe:#{topic}")
   end
 
-  defp broadcast({:error, _} = error, _event), do: error
-  defp broadcast({:ok, game} = ok, event) do
-    PubSub.broadcast(MyFirstPhoenix.PubSub, "tictactoe:lobby", {event, game})
+  defp broadcast({:error, _} = error, _event, _room), do: error
+  defp broadcast({:ok, game} = ok, event, room) do
+    PubSub.broadcast(MyFirstPhoenix.PubSub, "tictactoe:#{room}", {event, game})
     ok
   end
 end

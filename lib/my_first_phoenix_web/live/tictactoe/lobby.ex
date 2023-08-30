@@ -34,10 +34,11 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
   @impl true
   def handle_event("create_game", %{"game" => form_params}, socket) do
     case GameContext.create_game(socket.assigns.current_user, form_params) do
-      {:ok, %gameGame{} = game} ->
+      {:ok, %Game{} = game} ->
+        blank_form = to_form(Game.changeset(%Game{}))
         {:noreply,
          socket
-         |> assign(to_form(Game.changeset(%Game{})))
+         |> assign(form: blank_form)
          #|> hide_modal("create_game_modal")
          # https://hexdocs.pm/phoenix_live_view/js-interop.html#handling-server-pushed-events
          |> put_flash(:info, "Game created")
@@ -51,10 +52,32 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
   end
 
   @impl true
-  def handle_info({:new_game, game}, socket) do
+  def handle_event("join_game", %{"game-id" => game_id_str}, socket) do
+    IO.puts("Joining game #{game_id_str}")
+    GameContext.join_game(String.to_integer(game_id_str), socket.assigns.current_user)
+    {:noreply, socket}
+  end
+
+
+  # Broadcasts
+
+  @impl true
+  def handle_info({:new_game, %Game{} = game}, socket) do
     {:noreply, update(socket, :games, &([game | &1]))}
   end
 
+  @impl true
+  def handle_info({:player_added, %Game{} = game}, socket) do
+    games = Enum.map(
+      socket.assigns.games,
+      fn
+        g when g.game_id == game.game_id -> game
+        g -> g
+      end
+    )
+
+    {:noreply, assign(socket, :games, games)}
+  end
 
   @impl true
   def render(assigns) do
@@ -94,9 +117,9 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
       <dd><%= g.description %></dd>
       <dd>X: <%= (g.player_x && g.player_x.name) || "no one" %></dd>
       <dd>O: <%= (g.player_o && g.player_o.name) || "no one" %></dd>
-      <dd><.link :if={@current_user
-        && g.player_x && g.player_x.name != @current_user.name
-        && g.player_o && g.player_o.name != @current_user.name} href="#">Join game</.link></dd>
+      <dd><.button :if={@current_user
+        && @current_user.name not in Enum.map([g.player_x, g.player_o], &(Map.get(&1 || %{}, :name)))}
+        phx-click="join_game" phx-value-game-id={g.game_id}>Join game</.button></dd>
     </dl>
     """
   end

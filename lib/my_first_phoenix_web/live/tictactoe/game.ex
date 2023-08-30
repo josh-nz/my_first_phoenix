@@ -74,7 +74,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
       <dt>Player X: </dt>
       <dd><%= @meta.player_x && @meta.player_x.name %></dd>
       <dt>Player O: </dt>
-      <dd><%= @meta.player_o && @meta.player_o.name%></dd>
+      <dd><%= @meta.player_o && @meta.player_o.name %></dd>
     </dl>
 
     <.game_status game_status={@current_turn.status} player={@current_turn.next_player}  />
