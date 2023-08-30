@@ -17,5 +17,13 @@ defmodule MyFirstPhoenix.LanguagePlayground do
     IO.puts("bar(:name)")
   end
 
+  # Compile error:
+  # cannot invoke def/2 inside function/macro
+  # def baz() do
+  #   def innerf do
+  #     IO.puts("innerf")
+  #   end
 
+  #   innerf()
+  # end
 end
