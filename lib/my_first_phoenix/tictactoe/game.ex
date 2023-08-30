@@ -5,7 +5,9 @@ defmodule MyFirstPhoenix.Tictactoe.Game do
 
   def changeset(game, attrs \\ %{}) do
     types = %{title: :string, description: :string, player_x: :string, player_o: :string}
-    {game, types} |> cast(attrs, Map.keys(types))
+    {game, types}
+    |> cast(attrs, Map.keys(types))
+    |> validate()
   end
 
   def validate(changeset) do
@@ -13,7 +15,5 @@ defmodule MyFirstPhoenix.Tictactoe.Game do
     |> validate_required([:title])
     |> validate_length(:title, max: 50)
     |> validate_length(:description, max: 200)
-    # Emulate a repo action, returns appropriate {:ok, ...} or {:error, ...} tuple.
-    |> apply_action(:insert)
   end
 end

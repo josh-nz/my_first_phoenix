@@ -35,7 +35,7 @@ defmodule MyFirstPhoenix.Tictactoe.GameSupervisor do
 
     case child do
       {:ok, _pid} -> {:ok, game_metadata}
-      error -> error
+      _ -> {:error, game_metadata}
     end
   end
 

@@ -11,39 +11,37 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
     end
 
     games = GameContext.list_games()
-    changeset = GameContext.game_changeset(%Game{})
+    changeset = Game.changeset(%Game{})
 
     {:ok, assign(socket,
       current_user: session["current_user"],
       games: games,
-      form: to_form(changeset, as: :game))
+      form: to_form(changeset, as: :game)),
+      temporary_assigns: [form: nil]
     }
   end
 
   @impl true
-  def handle_event("validate_create_game", %{"game" => form_params}, socket) do
-
-    changeset = %Game{}
-      |> GameContext.game_changeset(form_params)
-      |> GameContext.validate_game
+  def handle_event("validate_create_game", %{"game" => game_params}, socket) do
+    form =
+      Game.changeset(%Game{}, game_params)
       |> Map.put(:action, :validate)
+      |> to_form(as: :game)
 
-    # IO.inspect(changeset, label: "changeset")
-
-    {:noreply, assign(socket, form: to_form(changeset, as: :game))}
+    {:noreply, assign(socket, form: form)}
   end
 
   @impl true
   def handle_event("create_game", %{"game" => form_params}, socket) do
     case GameContext.create_game(socket.assigns.current_user, form_params) do
-      {:ok, changes} ->
+      {:ok, %gameGame{} = game} ->
         {:noreply,
          socket
          #|> hide_modal("create_game_modal")
          # https://hexdocs.pm/phoenix_live_view/js-interop.html#handling-server-pushed-events
          |> put_flash(:info, "Game created")
         #  |> assign(show: false)
-        #  |> update(:games, &([changes.title | &1]))
+        #  |> update(:games, &([game.title | &1]))
         }
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -90,9 +88,15 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
       </.simple_form>
     </.modal>
 
-    <ul :for={g <- @games}>
-      <li><.link navigate={~p"/tictactoe/#{g.game_id}"}><%= g.title %></.link></li>
-    </ul>
+    <dl :for={g <- @games}>
+      <dt><.link navigate={~p"/tictactoe/#{g.game_id}"}><%= g.title %></.link></dt>
+      <dd><%= g.description %></dd>
+      <dd>X: <%= (g.player_x && g.player_x.name) || "no one" %></dd>
+      <dd>O: <%= (g.player_o && g.player_o.name) || "no one" %></dd>
+      <dd><.link :if={@current_user
+        && g.player_x && g.player_x.name != @current_user.name
+        && g.player_o && g.player_o.name != @current_user.name} href="#">Join game</.link></dd>
+    </dl>
     """
   end
 

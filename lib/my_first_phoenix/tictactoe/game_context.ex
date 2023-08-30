@@ -11,6 +11,10 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
     |> Enum.map(&game_metadata/1)
   end
 
+  defp game_metadata(game_id) do
+    GameServer.game_metadata(game_id)
+  end
+
   def load_game(game_id) do
     try do
       {:ok, GameServer.load_game(game_id)}
@@ -20,8 +24,18 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
       end
   end
 
-  def game_metadata(game_id) do
-    GameServer.game_metadata(game_id)
+  def create_game(current_user, params) do
+    if (current_user == nil) do
+      raise("Unauthenticated user cannot create game.")
+    end
+
+    #atom = Enum.random([:player_x, :player_o])
+    %Game{player_x: current_user}
+    |> Game.changeset(params)
+    |> Ecto.Changeset.apply_action(:create_game)
+    # |> IO.inspect()
+    |> GameSupervisor.create_game()
+    |> broadcast(:new_game)
   end
 
   def take_turn(caller, game_id, grid_id) do
@@ -37,25 +51,6 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
   end
 
 
-  def game_changeset(game, params \\ %{}) do
-    Game.changeset(game, params)
-  end
-
-  def validate_game(changeset) do
-    Game.validate(changeset)
-  end
-
-  def create_game(current_user, params) do
-    if (current_user == nil) do
-      raise("Unauthenticated user cannot create game.")
-    end
-
-    game_changeset(%Game{}, params)
-    |> validate_game()
-    # |> IO.inspect()
-    |> GameSupervisor.create_game()
-    |> broadcast(:new_game)
-  end
 
   def subscribe(topic) do
     PubSub.subscribe(MyFirstPhoenix.PubSub, "tictactoe:#{topic}")
