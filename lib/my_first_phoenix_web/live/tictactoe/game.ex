@@ -5,7 +5,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   alias MyFirstPhoenix.Tictactoe.GameContext
 
   @impl true
-  def mount(%{"game_id" => game_id_str} = _params, _session, socket) do
+  def mount(%{"game_id" => game_id_str} = _params, session, socket) do
     game_id = String.to_integer(game_id_str)
 
     if connected?(socket) do
@@ -14,7 +14,10 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
 
     case GameContext.load_game(game_id) do
       {:ok, %{metadata: %Game{} = meta, turns: turns}} ->
+        current_user = session["current_user"]
         {:ok, assign(socket, %{
+          current_user: current_user,
+          your_turn?: your_turn?(current_user, meta, hd(turns)),
           meta: meta,
           current_turn: hd(turns),
           game_turns: turns
@@ -31,6 +34,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
     turn = GameContext.take_turn(self(), socket.assigns.meta.game_id, grid_id)
 
     {:noreply, assign(socket, %{
+      your_turn?: your_turn?(socket.assigns.current_user, socket.assigns.meta, turn),
       current_turn: turn,
       game_turns: [turn | socket.assigns.game_turns]
     })}
@@ -43,6 +47,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
     turns = GameContext.rewind(self(), socket.assigns.meta.game_id, to_turn)
 
     {:noreply, assign(socket, %{
+      your_turn?: your_turn?(socket.assigns.current_user, socket.assigns.meta, hd(turns)),
       current_turn: hd(turns),
       game_turns: turns
     })}
@@ -53,7 +58,10 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
 
   @impl true
   def handle_info({:turn_taken, turn}, socket) do
+    your_turn? = your_turn?(socket.assigns.current_user, socket.assigns.meta, turn)
+    IO.inspect(your_turn?, label: "turn")
     {:noreply, assign(socket,
+      your_turn?: your_turn?,
       current_turn: turn,
       game_turns: [turn | socket.assigns.game_turns])}
   end
@@ -61,14 +69,35 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
   @impl true
   def handle_info({:game_history_changed, turns}, socket) do
     {:noreply, assign(socket,
+      your_turn?: your_turn?(socket.assigns.current_user, socket.assigns.meta, hd(turns)),
       current_turn: hd(turns),
       game_turns: turns)}
   end
 
   @impl true
   def handle_info({:player_added, %Game{} = game}, socket) do
-    {:noreply, assign(socket, :meta, game)}
+    {:noreply, assign(socket,
+      meta: game,
+      your_turn?: your_turn?(
+        socket.assigns.current_user,
+        socket.assigns.meta,
+        socket.assigns.current_turn))}
   end
+
+
+  defp your_turn?(current_user, meta, current_turn) do
+    cond do
+      is_nil(current_user) -> false
+      meta.player_x
+        && meta.player_x.name == current_user.name
+        && current_turn.next_player == "X" -> true
+      meta.player_o
+        && meta.player_o.name == current_user.name
+        && current_turn.next_player == "O" -> true
+      true -> false
+    end
+  end
+
 
   @impl true
   def render(assigns) do
@@ -85,9 +114,9 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
 
     <.game_status game_status={@current_turn.status} player={@current_turn.next_player}  />
 
-    <.board_row indexes={[1,2,3]} board={@current_turn.board} />
-    <.board_row indexes={[4,5,6]} board={@current_turn.board} />
-    <.board_row indexes={[7,8,9]} board={@current_turn.board} />
+    <.board_row indexes={[1,2,3]} board={@current_turn.board} your_turn?={@your_turn?} />
+    <.board_row indexes={[4,5,6]} board={@current_turn.board} your_turn?={@your_turn?} />
+    <.board_row indexes={[7,8,9]} board={@current_turn.board} your_turn?={@your_turn?} />
 
     <.game_history history={@game_turns} />
     """
@@ -115,10 +144,11 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
 
   attr :indexes, :list, required: true
   attr :board, :map, required: true
+  attr :your_turn?, :boolean, required: true
   def board_row(assigns) do
     ~H"""
     <div class="flex flex-row">
-      <.square :for={n <- @indexes} id={n} state={@board[n]} />
+      <.square :for={n <- @indexes} id={n} state={@board[n]} your_turn?={@your_turn?} />
     </div>
     """
   end
@@ -132,7 +162,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
       class="border border-black text-2xl font-bold text-center h-8 w-8 -mt-0.5 -mr-0.5 p-0"
       phx-click="square-clicked"
       phx-value-grid-id={@id}
-      disabled={@state != ""}
+      disabled={@state != "" || not @your_turn?}
       >
       <%= @state %>
     </button>
