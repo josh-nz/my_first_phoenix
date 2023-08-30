@@ -16,7 +16,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
     {:ok, assign(socket,
       current_user: session["current_user"],
       games: games,
-      form: to_form(changeset, as: :game)),
+      form: to_form(changeset)),
       temporary_assigns: [form: nil]
     }
   end
@@ -26,7 +26,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
     form =
       Game.changeset(%Game{}, game_params)
       |> Map.put(:action, :validate)
-      |> to_form(as: :game)
+      |> to_form()
 
     {:noreply, assign(socket, form: form)}
   end
@@ -37,6 +37,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
       {:ok, %gameGame{} = game} ->
         {:noreply,
          socket
+         |> assign(to_form(Game.changeset(%Game{})))
          #|> hide_modal("create_game_modal")
          # https://hexdocs.pm/phoenix_live_view/js-interop.html#handling-server-pushed-events
          |> put_flash(:info, "Game created")
@@ -45,7 +46,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
         }
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, form: to_form(changeset, as: :game))}
+        {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
 
@@ -82,7 +83,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
         <.input field={@form[:title]} label="Title"/>
         <.input field={@form[:description]} label="Description" />
         <:actions>
-          <.button type="submit">Create</.button>
+          <.button phx-disable-with="Creating...">Create</.button>
           <.link phx-click={JS.exec("data-cancel", to: "#create_game_modal")}>Cancel</.link>
         </:actions>
       </.simple_form>
