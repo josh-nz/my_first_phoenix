@@ -48,6 +48,9 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
     })}
   end
 
+
+  # Broadcasts
+
   @impl true
   def handle_info({:turn_taken, turn}, socket) do
     {:noreply, assign(socket,
@@ -62,7 +65,10 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
       game_turns: turns)}
   end
 
-
+  @impl true
+  def handle_info({:player_added, %Game{} = game}, socket) do
+    {:noreply, assign(socket, :meta, game)}
+  end
 
   @impl true
   def render(assigns) do
