@@ -9,6 +9,8 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
   def list_games() do
     GameSupervisor.list_games()
     |> Enum.map(&game_metadata/1)
+    |> Enum.sort({:desc, Game})  # Calls compare/2 in Game module to sort Game structs.
+    # |> Enum.sort_by(&(&1.game_id), :asc)  # Alternative, selecting field to sort by.
   end
 
   defp game_metadata(game_id) do
