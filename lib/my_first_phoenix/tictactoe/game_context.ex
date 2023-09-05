@@ -21,24 +21,30 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
     try do
       {:ok, GameServer.load_game(game_id)}
     catch
-      :exit, e ->
-        {:error, e}
-      end
+      :exit, e -> {:error, e}
+    end
   end
 
-  def create_game(current_user, params) do
+  def create_game!(current_user, params) do
     if (current_user == nil) do
       raise("Unauthenticated user cannot create game.")
     end
 
     # params = Map.put(params, Enum.random(["player_x", "player_o"]), current_user)
-    %Game{}
-    |> Map.put(Enum.random([:player_x, :player_o]), current_user)
-    |> Game.changeset(params)
-    |> IO.inspect()
-    |> Ecto.Changeset.apply_action(:create_game)
-    |> GameSupervisor.create_game()
-    |> broadcast(:new_game, "lobby")
+
+    changeset =
+      %Game{}
+      |> Map.put(Enum.random([:player_x, :player_o]), current_user)
+      |> Game.changeset(params)
+      # |> IO.inspect()
+
+    case Ecto.Changeset.apply_action(changeset, :create_game) do
+      {:ok, game} ->
+        game = GameSupervisor.create_game!(game)
+        broadcast("lobby", :new_game, game)
+        {:ok, game}
+      {:error, changeset} -> {:error, changeset}
+    end
   end
 
   def join_game(game_id, current_user) do
@@ -46,9 +52,12 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
       raise("Unauthenticated user cannot join game.")
     end
 
-    GameServer.add_player(game_id, current_user)
-    |> broadcast(:player_added, "lobby")
-    |> broadcast(:player_added, game_id)
+    case GameServer.add_player(game_id, current_user) do
+      {:ok, game} ->
+        broadcast("lobby", :player_added, game)
+        broadcast(game_id, :player_added, game)
+      {:error, message} -> {:error, message}
+    end
   end
 
   def take_turn(caller, game_id, grid_id) do
@@ -69,9 +78,7 @@ defmodule MyFirstPhoenix.Tictactoe.GameContext do
     PubSub.subscribe(MyFirstPhoenix.PubSub, "tictactoe:#{topic}")
   end
 
-  defp broadcast({:error, _} = error, _event, _room), do: error
-  defp broadcast({:ok, game} = ok, event, room) do
+  defp broadcast(room, event, game) do
     PubSub.broadcast(MyFirstPhoenix.PubSub, "tictactoe:#{room}", {event, game})
-    ok
   end
 end

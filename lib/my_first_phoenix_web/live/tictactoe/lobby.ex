@@ -33,7 +33,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
 
   @impl true
   def handle_event("create_game", %{"game" => form_params}, socket) do
-    case GameContext.create_game(socket.assigns.current_user, form_params) do
+    case GameContext.create_game!(socket.assigns.current_user, form_params) do
       {:ok, %Game{} = game} ->
         blank_form = to_form(Game.changeset(%Game{}))
         {:noreply,
@@ -53,7 +53,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Lobby do
 
   @impl true
   def handle_event("join_game", %{"game-id" => game_id_str}, socket) do
-    IO.puts("Joining game #{game_id_str}")
+    # Handle error case here and display to user?
     GameContext.join_game(String.to_integer(game_id_str), socket.assigns.current_user)
     {:noreply, socket}
   end

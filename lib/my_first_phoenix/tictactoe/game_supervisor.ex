@@ -19,8 +19,7 @@ defmodule MyFirstPhoenix.Tictactoe.GameSupervisor do
     [{{:"$1", :_, :_}, [], [:"$1"]}])
   end
 
-  def create_game({:error, _} = error), do: error
-  def create_game({:ok, %Game{} = game}) do
+  def create_game!(%Game{} = game) do
     game_metadata = %{game | game_id: Storage.next_game_id()}
 
     child =
@@ -34,8 +33,8 @@ defmodule MyFirstPhoenix.Tictactoe.GameSupervisor do
       )
 
     case child do
-      {:ok, _pid} -> {:ok, game_metadata}
-      _ -> {:error, game_metadata}
+      {:ok, _pid} -> game_metadata
+      {:error, error} -> raise(error)
     end
   end
 
