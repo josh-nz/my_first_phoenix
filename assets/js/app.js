@@ -39,3 +39,11 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
+// https://fly.io/phoenix-files/server-triggered-js
+// https://hexdocs.pm/phoenix_live_view/js-interop.html#handling-server-pushed-events
+window.addEventListener("phx:js-exec", ({detail}) => {
+  document.querySelectorAll(detail.to).forEach(el => {
+    liveSocket.execJS(el, el.getAttribute(detail.attr))
+  })
+})
+
