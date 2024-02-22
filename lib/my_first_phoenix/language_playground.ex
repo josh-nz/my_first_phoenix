@@ -9,7 +9,7 @@ defmodule MyFirstPhoenix.LanguagePlayground do
   # Fun pattern matching is dependent on fun
   # ordering. As ordered below, bar(:name) will
   # print "bar(any)".
-  def bar(any) do
+  def bar(_any) do
     IO.puts("bar(any)")
   end
 
