@@ -27,6 +27,23 @@ defmodule MyFirstPhoenix.Tictactoe.Game do
       game1.game_id < game2.game_id -> :lt
       true -> :eq
     end
-    #Returns :gt if first date is later than the second and :lt for vice versa. If the two dates are equal :eq is returned.
   end
 end
+
+# defmodule Game do
+#   use Ecto.Schema
+
+#   embedded_schema do
+#     field :title, :string
+#     field :description, :string
+#     embeds_one :player_x, Player
+#     embeds_one :player_o, Player
+#   end
+
+#   def changeset(game, attrs \\ %{}) do
+#     game
+#     |> cast(attrs, [:title, :description])
+#     |> cast_embed(:player_x) # uses Player.changeset/2 by default
+#     |> cast_embed(:player_o)
+#   end
+# end

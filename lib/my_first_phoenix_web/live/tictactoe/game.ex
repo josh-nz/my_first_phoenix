@@ -156,6 +156,7 @@ defmodule MyFirstPhoenixWeb.Tictactoe.Game do
 
   attr :id, :string, required: true
   attr :state, :string, required: true
+  attr :your_turn?, :boolean, required: true
   def square(assigns) do
     ~H"""
     <button
