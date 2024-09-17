@@ -43,7 +43,7 @@ defmodule MyFirstPhoenixWeb do
         layouts: [html: MyFirstPhoenixWeb.Layouts]
 
       import Plug.Conn
-      import MyFirstPhoenixWeb.Gettext
+      use Gettext, backend: MyFirstPhoenixWeb.Gettext
 
       unquote(verified_routes())
     end
@@ -85,7 +85,7 @@ defmodule MyFirstPhoenixWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import MyFirstPhoenixWeb.CoreComponents
-      import MyFirstPhoenixWeb.Gettext
+      use Gettext, backend: MyFirstPhoenixWeb.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
